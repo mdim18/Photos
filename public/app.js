@@ -395,8 +395,10 @@ function renderMonths(el) {
 
 const ALBUM_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h13a1 1 0 0 1 1 1v13h-2V5H7zM3 7h13a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/></svg>';
 const TRASH_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4zm-3 6h12l-1 12H7z"/></svg>';
-function albumCard(attrs, name, list, icon = ALBUM_ICON) {
-  const c = list.length ? coverOf(list) : null;
+// An album's cover: the photo chosen for it, if it's still in the album.
+const albumCover = (a, list) => (a.cover && list.find((p) => p.id === a.cover)) || (list.length ? coverOf(list) : null);
+function albumCard(attrs, name, list, icon = ALBUM_ICON, cover = null) {
+  const c = cover || (list.length ? coverOf(list) : null);
   return `<button class="album-card" ${attrs}><span class="album-cover">${c ? `<img src="${esc(c.thumb)}" alt="" loading="lazy" decoding="async" crossorigin="anonymous">` : icon}</span><strong>${esc(name)}</strong><span>${list.length.toLocaleString()}</span></button>`;
 }
 const PIN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg>';
@@ -427,7 +429,7 @@ function renderAlbums(el) {
     <h2 class="albums-section-title">My Albums</h2>
     <div class="album-grid">
       ${albumCard('data-goto="favorites"', "Favorites", favList, HEART)}
-      ${mine.map((a) => albumCard(`data-album="${a.id}"`, a.name, albumPhotos(a))).join("")}
+      ${mine.map((a) => { const ps = albumPhotos(a); return albumCard(`data-album="${a.id}"`, a.name, ps, ALBUM_ICON, albumCover(a, ps)); }).join("")}
     </div>
     ${mine.length ? "" : `<p class="trash-note">Tap New album to make one, or go to Library, tap Select, choose photos, and tap Add to album.</p>`}
     <div class="albums-utilities">
@@ -792,6 +794,9 @@ function updateSelbar() {
     const only = b.dataset.only?.split(" "), not = b.dataset.not?.split(" ");
     b.hidden = (only && !only.includes(S.view)) || (not && not.includes(S.view));
   }
+  const coverBtn = document.querySelector('[data-act="cover"]');
+  coverBtn.disabled = n !== 1;
+  if (currentAlbum()?.auto) coverBtn.hidden = true;
   if (currentAlbum()?.auto) {
     document.querySelector('[data-act="removeAlbum"]').hidden = true;
     if (S.view === "album") document.querySelector('[data-act="addAlbum"]').hidden = false;
@@ -810,6 +815,11 @@ document.querySelector(".selbar-actions").addEventListener("click", async (e) =>
   if (!act || !photos.length) return;
   if (act === "save") return saveMany(photos);
   if (act === "addAlbum") return openAlbumPicker(photos);
+  if (act === "cover") {
+    const a = currentAlbum();
+    if (a && !a.auto && photos.length === 1) setCover(a, photos[0]);
+    return exitSelect();
+  }
   if (act === "removeAlbum") {
     const a = currentAlbum();
     const gone = new Set(photos.map((p) => p.id));
@@ -924,7 +934,7 @@ function openAlbumPicker(photos) {
     mine
       .map((a) => {
         const list = albumPhotos(a);
-        const c = list.length ? coverOf(list) : null;
+        const c = albumCover(a, list);
         return `<button data-pick="${a.id}">${c ? `<img class="picker-thumb" src="${esc(c.thumb)}" alt="" crossorigin="anonymous">` : `<span class="picker-thumb">${ALBUM_ICON}</span>`}<span><strong>${esc(a.name)}</strong><small>${plural(list.length, "photo")}</small></span></button>`;
       })
       .join("");
@@ -1118,6 +1128,7 @@ function openViewer(list, i) {
   V.i = i;
   const inTrash = S.view === "trash";
   $("vRecover").hidden = !inTrash;
+  $("vCover").hidden = !(S.view === "album" && currentAlbum() && !currentAlbum().auto);
   $("vFav").hidden = $("vPlay").hidden = inTrash;
   $("vDelete").setAttribute("aria-label", inTrash ? "Delete for good" : "Delete photo");
   $("viewer").hidden = false;
@@ -1175,6 +1186,9 @@ function showPhoto() {
   $("vCount").textContent = `${(V.i + 1).toLocaleString()} of ${V.list.length.toLocaleString()}`;
   $("vFav").setAttribute("aria-pressed", String(S.favs.has(p.id)));
   $("vFav").setAttribute("aria-label", S.favs.has(p.id) ? "Remove from favorites" : "Add to favorites");
+  const isCover = currentAlbum()?.cover === p.id;
+  $("vCover").setAttribute("aria-pressed", String(isCover));
+  $("vCover").setAttribute("aria-label", isCover ? "This is the album cover" : "Make album cover");
 }
 function step(d) {
   const n = V.i + d;
@@ -1212,6 +1226,19 @@ function dropCurrent() {
 }
 $("vDelete").onclick = async () => {
   if (await removePhotos([V.list[V.i]])) dropCurrent();
+};
+function setCover(a, p) {
+  a.cover = p.id;
+  saveAlbums();
+  toast(`Cover photo for ${a.name} changed.`);
+}
+$("vCover").onclick = () => {
+  const a = currentAlbum();
+  const p = V.list[V.i];
+  if (!a || a.auto || !p) return;
+  setCover(a, p);
+  $("vCover").setAttribute("aria-pressed", "true");
+  $("vCover").setAttribute("aria-label", "This is the album cover");
 };
 $("vRecover").onclick = async () => {
   if (await recoverPhotos([V.list[V.i]])) dropCurrent();

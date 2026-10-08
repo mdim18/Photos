@@ -106,6 +106,7 @@
       <div class="selbar-actions">
         <button data-act="save" data-not="trash">Save</button>
         <button data-act="addAlbum" data-not="trash album">Add to album</button>
+        <button data-act="cover" data-only="album">Set as cover</button>
         <button data-act="removeAlbum" data-only="album">Remove from album</button>
         <button data-act="slideshow" data-not="trash">Slideshow</button>
         <button data-act="movie" data-not="trash">Make movie</button>
@@ -154,6 +155,9 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l4.2 4.2-1.4 1.4L13 6.3V15h-2V6.3L9.2 8.1 7.8 6.7zM5 10h3v2H6v8h12v-8h-2v-2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1z"/></svg>
       </button>
       <button id="vRecover" class="v-btn" hidden>Recover</button>
+      <button id="vCover" class="v-icon" aria-label="Make album cover" aria-pressed="false" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v9.6l3.6-3.6 3 3 4.4-4.4 3 3V6zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg>
+      </button>
       <button id="vFav" class="v-icon" aria-label="Favorite" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 6.8a4.5 4.5 0 0 1 8 2.7c0 6.1-8 11-8 11z"/></svg>
       </button>

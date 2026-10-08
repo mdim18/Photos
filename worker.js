@@ -141,6 +141,8 @@ function cleanAlbums(list) {
       created: Number(a.created) || Date.now(),
       // Albums made from a folder remember it, so later uploads from it join automatically.
       ...(typeof a.source === "string" && a.source.startsWith("folder:") ? { source: a.source.slice(0, 120) } : {}),
+      // The photo chosen as the album's cover, if one was chosen.
+      ...(ID_RE.test(a.cover) ? { cover: a.cover } : {}),
     }));
 }
 const readAlbums = async (env) => cleanAlbums(await readJson(env, "meta/albums.json", []));

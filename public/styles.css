@@ -419,3 +419,5 @@ main { padding-bottom: calc(var(--tabbar) + 16px); }
 .picker-list label:hover { background: var(--surface); }
 .picker-list input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-fill); flex: none; }
 .fc-root .seg button[aria-pressed="true"] { background: var(--accent-fill); color: #1b1200; }
+
+#vCover[aria-pressed="true"] { color: var(--accent-fill); }
