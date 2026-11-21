@@ -9,5 +9,5 @@
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "photos" }],
   // Keep settings you add in the dashboard when the site redeploys.
   "keep_vars": true,
-  "observability": { "enabled": true }
+  "observability": { "enabled": false }
 }
